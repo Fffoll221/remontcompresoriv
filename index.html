@@ -7,6 +7,46 @@
     <meta name="description"
           content="Ремонт та сервіс поршневих і гвинтових компресорів у Києві. Виїзд майстра, діагностика, капремонт, обслуговування та монтаж пневмосистем.">
     <link rel="stylesheet" href="style.css">
+
+    <!-- ДОДАНІ СТИЛІ ДЛЯ СЛАЙДЕРА -->
+    <style>
+        /* Базові налаштування слайдера */
+        .slider {
+            overflow: hidden;
+            position: relative;
+        }
+
+        .slider-track {
+            display: flex;
+            transition: transform 0.35s ease;
+            will-change: transform;
+        }
+
+        .slider .slide {
+            min-width: 100%;
+            padding: 16px;
+            box-sizing: border-box;
+        }
+
+        .slider .slide img {
+            display: block;
+            width: 100%;
+            max-height: 320px;      /* трохи далі – щоб весь компресор був видно */
+            margin: 0 auto;
+            object-fit: contain !important; /* не обрізає картинку */
+            border-radius: 16px;
+        }
+
+        @media (max-width: 768px) {
+            .slider .slide {
+                padding: 12px;
+            }
+
+            .slider .slide img {
+                max-height: 240px;  /* ще трохи менше на маленьких екранах */
+            }
+        }
+    </style>
 </head>
 <body>
 
@@ -24,14 +64,14 @@
 <!-- ===== HEADER ===== -->
 <header class="header">
     <div class="container header-inner">
-<div class="logo">
-    <img src="logo.png" alt="Логотип КомпресорМайстер" class="logo-img">
+        <div class="logo">
+            <img src="logo.png" alt="Логотип КомпресорМайстер" class="logo-img">
 
-    <div class="logo-text">
-        <span class="logo-main">КомпресорМайстер</span>
-        <span class="logo-sub">Ремонт повітряних компресорів у Києві</span>
-    </div>
-</div>
+            <div class="logo-text">
+                <span class="logo-main">КомпресорМайстер</span>
+                <span class="logo-sub">Ремонт повітряних компресорів у Києві</span>
+            </div>
+        </div>
 
         <button class="burger" aria-label="Відкрити меню">
             <span></span><span></span><span></span>
@@ -438,7 +478,7 @@
 
     document.querySelectorAll(".fade-in-section").forEach(el => observer.observe(el));
 
-    // Простий слайдер (одна логіка для всіх .slider на сторінці)
+    // ОНОВЛЕНИЙ СЛАЙДЕР ЗІ СВАЙПОМ
     document.querySelectorAll(".slider").forEach(slider => {
         const track = slider.querySelector(".slider-track");
         const slides = slider.querySelectorAll(".slide");
@@ -446,6 +486,10 @@
         const btnNext = slider.querySelector(".slider-btn-next");
 
         let index = 0;
+        let startX = 0;
+        let currentX = 0;
+        let isDragging = false;
+        const swipeThreshold = 40; // скільки пікселів треба провести, щоб переключити слайд
 
         function updateSlider() {
             const width = slider.clientWidth;
@@ -462,8 +506,52 @@
             updateSlider();
         }
 
+        // Кнопки
         btnNext && btnNext.addEventListener("click", goNext);
         btnPrev && btnPrev.addEventListener("click", goPrev);
+
+        // Touch / свайп
+        function onPointerStart(e) {
+            isDragging = true;
+            startX = e.touches ? e.touches[0].clientX : e.clientX;
+            currentX = startX;
+        }
+
+        function onPointerMove(e) {
+            if (!isDragging) return;
+            currentX = e.touches ? e.touches[0].clientX : e.clientX;
+        }
+
+        function onPointerEnd() {
+            if (!isDragging) return;
+            const diffX = currentX - startX;
+
+            if (Math.abs(diffX) > swipeThreshold) {
+                if (diffX < 0) {
+                    goNext(); // свайп вліво
+                } else {
+                    goPrev(); // свайп вправо
+                }
+            }
+
+            isDragging = false;
+            startX = 0;
+            currentX = 0;
+        }
+
+        // Touch події (мобілки)
+        track.addEventListener("touchstart", onPointerStart, {passive: true});
+        track.addEventListener("touchmove", onPointerMove, {passive: true});
+        track.addEventListener("touchend", onPointerEnd);
+
+        // Події мишкою (десктоп)
+        track.addEventListener("mousedown", (e) => {
+            e.preventDefault();
+            onPointerStart(e);
+        });
+        window.addEventListener("mousemove", onPointerMove);
+        window.addEventListener("mouseup", onPointerEnd);
+
         window.addEventListener("resize", updateSlider);
         updateSlider();
     });
